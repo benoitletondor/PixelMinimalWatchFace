@@ -211,7 +211,7 @@ class WatchFaceDrawerImpl : WatchFaceDrawer {
             secondsRingPaint = Paint().apply {
                 style = Paint.Style.STROKE
                 color = Color.WHITE
-                strokeWidth = 4F
+                strokeWidth = 10F
             }
         }
         setPaintVariables(muteMode, ambient, lowBitAmbient, burnInProtection)
