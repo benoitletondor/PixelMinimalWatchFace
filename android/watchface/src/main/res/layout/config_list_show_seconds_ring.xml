@@ -21,4 +21,4 @@
     android:layout_height="wrap_content"
     style="@style/ButtonConfigurationStyle"
     android:text="@string/config_show_seconds_ring"
-    android:drawableStart="@drawable/ic_access_time"/>
+    android:drawableStart="@drawable/ic_baseline_panorama_fish_eye"/>

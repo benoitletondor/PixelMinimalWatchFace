@@ -51,6 +51,7 @@ private const val TYPE_SHOW_WEAR_OS_LOGO = 7
 private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
 private const val TYPE_SHOW_FILLED_TIME_AMBIENT = 9
 private const val TYPE_SHOW_SECONDS_RING = 10
+
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
     private val storage: Storage,
@@ -209,7 +210,7 @@ class ComplicationConfigRecyclerViewAdapter(
                 (viewHolder as ShowFilledTimeAmbientViewHolder).setShowFilledTimeSwitchChecked(showFilledTimeAmbient)
             }
             TYPE_SHOW_SECONDS_RING -> {
-                val showSeconds = storage.shouldShowSecondsRing();
+                val showSeconds = storage.shouldShowSecondsRing()
                 (viewHolder as ShowSecondsRingViewHolder).setShowSecondsRingSwitchChecked(showSeconds)
             }
         }
@@ -270,9 +271,9 @@ class ComplicationConfigRecyclerViewAdapter(
 
     override fun getItemCount(): Int {
         return if( storage.isUserPremium() ) {
-            9
+            10
         } else {
-            7
+            8
         }
     }
 

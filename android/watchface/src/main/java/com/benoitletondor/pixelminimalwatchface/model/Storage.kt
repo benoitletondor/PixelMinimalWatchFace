@@ -51,7 +51,7 @@ interface Storage {
     fun shouldShowFilledTimeInAmbientMode(): Boolean
     fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean)
     fun shouldShowSecondsRing(): Boolean
-    fun setShouldShowSecondsRing(secondsRingEnabled: Boolean)
+    fun setShouldShowSecondsRing(showSecondsRing: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -59,6 +59,19 @@ class StorageImpl : Storage {
 
     private lateinit var appContext: Context
     private lateinit var sharedPreferences: SharedPreferences
+
+    // Those values will be called up to 60 times a minute when not in ambient mode
+    // SharedPreferences uses a map so we cache the values to avoid map lookups
+    private var isUserPremiumCached = false
+    private var cacheIsUserPremium = false
+    private var isUse24hFormatCached = false
+    private var cacheUse24hFormat = false
+    private var shouldShowWearOSLogoCached = false
+    private var cacheShouldShowWearOSLogo = false
+    private var shouldShowComplicationsInAmbientModeCached = false
+    private var cacheShouldShowComplicationsInAmbientMode = false
+    private var shouldShowSecondsSettingCached = false
+    private var cacheShouldShowSecondsSetting = false
 
     fun init(context: Context): Storage {
         if( !initialized ) {
@@ -105,19 +118,35 @@ class StorageImpl : Storage {
     }
 
     override fun isUserPremium(): Boolean {
-        return sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+        if( !isUserPremiumCached ) {
+            cacheIsUserPremium = sharedPreferences.getBoolean(KEY_USER_PREMIUM, false)
+            isUserPremiumCached = true
+        }
+
+        return cacheIsUserPremium
     }
 
     override fun setUserPremium(premium: Boolean) {
+        cacheIsUserPremium = premium
+        isUserPremiumCached = true
+
         sharedPreferences.edit().putBoolean(KEY_USER_PREMIUM, premium).apply()
     }
 
     override fun setUse24hTimeFormat(use: Boolean) {
+        cacheUse24hFormat = use
+        isUse24hFormatCached = true
+
         sharedPreferences.edit().putBoolean(KEY_USE_24H_TIME_FORMAT, use).apply()
     }
 
     override fun getUse24hTimeFormat(): Boolean {
-        return sharedPreferences.getBoolean(KEY_USE_24H_TIME_FORMAT, true)
+        if( !isUse24hFormatCached ) {
+            cacheUse24hFormat = sharedPreferences.getBoolean(KEY_USE_24H_TIME_FORMAT, true)
+            isUse24hFormatCached = true
+        }
+
+        return cacheUse24hFormat
     }
 
     override fun getInstallTimestamp(): Long {
@@ -141,18 +170,34 @@ class StorageImpl : Storage {
     }
 
     override fun shouldShowWearOSLogo(): Boolean {
-        return sharedPreferences.getBoolean(KEY_SHOW_WEAR_OS_LOGO, true)
+        if( !shouldShowWearOSLogoCached ) {
+            cacheShouldShowWearOSLogo = sharedPreferences.getBoolean(KEY_SHOW_WEAR_OS_LOGO, true)
+            shouldShowWearOSLogoCached = true
+        }
+
+        return cacheShouldShowWearOSLogo
     }
 
     override fun setShouldShowWearOSLogo(shouldShowWearOSLogo: Boolean) {
+        cacheShouldShowWearOSLogo = shouldShowWearOSLogo
+        shouldShowWearOSLogoCached = true
+
         sharedPreferences.edit().putBoolean(KEY_SHOW_WEAR_OS_LOGO, shouldShowWearOSLogo).apply()
     }
 
     override fun shouldShowComplicationsInAmbientMode(): Boolean {
-        return sharedPreferences.getBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, false)
+        if( !shouldShowComplicationsInAmbientModeCached ) {
+            cacheShouldShowComplicationsInAmbientMode = sharedPreferences.getBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, false)
+            shouldShowComplicationsInAmbientModeCached = true
+        }
+
+        return cacheShouldShowComplicationsInAmbientMode
     }
 
     override fun setShouldShowComplicationsInAmbientMode(show: Boolean) {
+        cacheShouldShowComplicationsInAmbientMode = show
+        shouldShowComplicationsInAmbientModeCached = true
+
         sharedPreferences.edit().putBoolean(KEY_SHOW_COMPLICATIONS_AMBIENT, show).apply()
     }
 
@@ -163,20 +208,21 @@ class StorageImpl : Storage {
     override fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_FILLED_TIME_AMBIENT, showFilledTime).apply()
     }
-    private var shouldShowSecondsSettingCache: Boolean = false;
+
+
     override fun shouldShowSecondsRing(): Boolean {
-        // If this setting is true, it has the potential to be called 60+ times a minute
-        // The sharedPreferences implementation on Android (check AOSP) uses a map
-        // We don't want to do map lookups that 60 times/sec b/c watch batteries are tiny, so we cache the value
-        if(!shouldShowSecondsSettingCache)
-        {
-            // if the value if false it'll get called pretty rarely so this is ok:
-            shouldShowSecondsSettingCache = sharedPreferences.getBoolean(KEY_SECONDS_RING, false);
+        if( !shouldShowSecondsSettingCached ) {
+            cacheShouldShowSecondsSetting = sharedPreferences.getBoolean(KEY_SECONDS_RING, false)
+            shouldShowSecondsSettingCached = true
         }
-        return shouldShowSecondsSettingCache;
+
+        return cacheShouldShowSecondsSetting
     }
-    override fun setShouldShowSecondsRing(secondsRingEnabled: Boolean) {
-        shouldShowSecondsSettingCache = secondsRingEnabled;
-        sharedPreferences.edit().putBoolean(KEY_SECONDS_RING, secondsRingEnabled).apply()
+
+    override fun setShouldShowSecondsRing(showSecondsRing: Boolean) {
+        cacheShouldShowSecondsSetting = showSecondsRing
+        shouldShowSecondsSettingCached = true
+
+        sharedPreferences.edit().putBoolean(KEY_SECONDS_RING, showSecondsRing).apply()
     }
 }

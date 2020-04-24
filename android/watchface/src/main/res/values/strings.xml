@@ -28,7 +28,7 @@
     <string name="config_show_filled_time_ambient">Use thin time in ambient mode</string>
     <string name="config_show_wear_os_logo_premium">WearOS logo as middle widget</string>
     <string name="config_show_complications_ambient">Widgets in ambient mode</string>
-    <string name="config_show_seconds_ring">Show seconds ring in interactive mode</string>
+    <string name="config_show_seconds_ring">Show seconds ring</string>
 
     <string name="premium_confirmation">Configure widgets in Watch Face settings</string>
     <string name="open_phone_url_android_device">Continue on phone</string>
