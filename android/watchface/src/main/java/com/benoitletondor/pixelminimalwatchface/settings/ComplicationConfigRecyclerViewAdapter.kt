@@ -50,7 +50,7 @@ private const val TYPE_SEND_FEEDBACK = 6
 private const val TYPE_SHOW_WEAR_OS_LOGO = 7
 private const val TYPE_SHOW_COMPLICATIONS_AMBIENT = 8
 private const val TYPE_SHOW_FILLED_TIME_AMBIENT = 9
-
+private const val TYPE_SHOW_SECONDS_RING = 10
 class ComplicationConfigRecyclerViewAdapter(
     private val context: Context,
     private val storage: Storage,
@@ -59,7 +59,8 @@ class ComplicationConfigRecyclerViewAdapter(
     private val onFeedbackButtonPressed: () -> Unit,
     private val showWearOSButtonListener: (Boolean) -> Unit,
     private val showComplicationsAmbientListener: (Boolean) -> Unit,
-    private val showFilledTimeAmbientListener: (Boolean) -> Unit
+    private val showFilledTimeAmbientListener: (Boolean) -> Unit,
+    private val showSecondsRingListener: (Boolean) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var selectedComplicationLocation: ComplicationLocation? = null
@@ -164,6 +165,14 @@ class ComplicationConfigRecyclerViewAdapter(
                 ),
                 showFilledTimeAmbientListener
             )
+            TYPE_SHOW_SECONDS_RING -> return ShowSecondsRingViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.config_list_show_seconds_ring,
+                    parent,
+                    false
+                ),
+                showSecondsRingListener
+            )
         }
         throw IllegalStateException("Unknown option type: $viewType")
     }
@@ -198,6 +207,10 @@ class ComplicationConfigRecyclerViewAdapter(
             TYPE_SHOW_FILLED_TIME_AMBIENT -> {
                 val showFilledTimeAmbient = storage.shouldShowFilledTimeInAmbientMode()
                 (viewHolder as ShowFilledTimeAmbientViewHolder).setShowFilledTimeSwitchChecked(showFilledTimeAmbient)
+            }
+            TYPE_SHOW_SECONDS_RING -> {
+                val showSeconds = storage.shouldShowSecondsRing();
+                (viewHolder as ShowSecondsRingViewHolder).setShowSecondsRingSwitchChecked(showSeconds)
             }
         }
     }
@@ -236,7 +249,8 @@ class ComplicationConfigRecyclerViewAdapter(
                 4 -> TYPE_SHOW_COMPLICATIONS_AMBIENT
                 5 -> TYPE_HOUR_FORMAT
                 6 -> TYPE_SHOW_FILLED_TIME_AMBIENT
-                7 -> TYPE_SEND_FEEDBACK
+                7 -> TYPE_SHOW_SECONDS_RING
+                8 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         } else {
@@ -246,7 +260,8 @@ class ComplicationConfigRecyclerViewAdapter(
                 2 -> TYPE_SHOW_WEAR_OS_LOGO
                 3 -> TYPE_HOUR_FORMAT
                 4 -> TYPE_SHOW_FILLED_TIME_AMBIENT
-                5 -> TYPE_SEND_FEEDBACK
+                5 -> TYPE_SHOW_SECONDS_RING
+                6 -> TYPE_SEND_FEEDBACK
                 else -> TYPE_FOOTER
             }
         }
@@ -539,5 +554,20 @@ class ShowFilledTimeAmbientViewHolder(view: View,
 
     fun setShowFilledTimeSwitchChecked(checked: Boolean) {
         showFilledTimeSwitch.isChecked = !checked
+    }
+}
+
+class ShowSecondsRingViewHolder(view: View,
+                                      showSecondsRingClickListener: (Boolean) -> Unit) : RecyclerView.ViewHolder(view) {
+    private val showSecondsRingSwitch: Switch = view as Switch
+
+    init {
+        showSecondsRingSwitch.setOnCheckedChangeListener { _, checked ->
+            showSecondsRingClickListener(checked)
+        }
+    }
+
+    fun setShowSecondsRingSwitchChecked(checked: Boolean) {
+        showSecondsRingSwitch.isChecked = checked
     }
 }

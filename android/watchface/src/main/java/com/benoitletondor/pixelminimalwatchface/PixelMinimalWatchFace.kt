@@ -130,7 +130,6 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
         private var ambient = false
         private var lowBitAmbient = false
         private var burnInProtection = false
-
         private val timeDependentUpdateHandler = ComplicationTimeDependentUpdateHandler(WeakReference(this))
         private val timeDependentTexts = SparseArray<ComplicationText>()
 
@@ -312,7 +311,8 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
                 muteMode,
                 ambient,
                 lowBitAmbient,
-                burnInProtection
+                burnInProtection,
+                storage.shouldShowSecondsRing()
             )
 
             if( !ambient && isVisible && !timeDependentUpdateHandler.hasUpdateScheduled() ) {
@@ -325,6 +325,7 @@ class PixelMinimalWatchFace : CanvasWatchFaceService() {
 
         @Suppress("SameParameterValue")
         private fun getNextComplicationUpdateDelay(): Long? {
+            if(storage.shouldShowSecondsRing()) return 500;
             var minValue = Long.MAX_VALUE
 
             COMPLICATION_IDS.forEach { complicationId ->

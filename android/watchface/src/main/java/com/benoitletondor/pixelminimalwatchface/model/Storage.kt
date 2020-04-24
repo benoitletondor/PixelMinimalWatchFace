@@ -30,6 +30,7 @@ private const val KEY_APP_VERSION = "appVersion"
 private const val KEY_SHOW_WEAR_OS_LOGO = "showWearOSLogo"
 private const val KEY_SHOW_COMPLICATIONS_AMBIENT = "showComplicationsAmbient"
 private const val KEY_FILLED_TIME_AMBIENT = "filledTimeAmbient"
+private const val KEY_SECONDS_RING = "secondsRing"
 
 interface Storage {
     fun getComplicationColors(): ComplicationColors
@@ -49,6 +50,8 @@ interface Storage {
     fun setShouldShowComplicationsInAmbientMode(show: Boolean)
     fun shouldShowFilledTimeInAmbientMode(): Boolean
     fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean)
+    fun shouldShowSecondsRing(): Boolean
+    fun setShouldShowSecondsRing(secondsRingEnabled: Boolean)
 }
 
 class StorageImpl : Storage {
@@ -159,5 +162,21 @@ class StorageImpl : Storage {
 
     override fun setShouldShowFilledTimeInAmbientMode(showFilledTime: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_FILLED_TIME_AMBIENT, showFilledTime).apply()
+    }
+    private var shouldShowSecondsSettingCache: Boolean = false;
+    override fun shouldShowSecondsRing(): Boolean {
+        // If this setting is true, it has the potential to be called 60+ times a minute
+        // The sharedPreferences implementation on Android (check AOSP) uses a map
+        // We don't want to do map lookups that 60 times/sec b/c watch batteries are tiny, so we cache the value
+        if(!shouldShowSecondsSettingCache)
+        {
+            // if the value if false it'll get called pretty rarely so this is ok:
+            shouldShowSecondsSettingCache = sharedPreferences.getBoolean(KEY_SECONDS_RING, false);
+        }
+        return shouldShowSecondsSettingCache;
+    }
+    override fun setShouldShowSecondsRing(secondsRingEnabled: Boolean) {
+        shouldShowSecondsSettingCache = secondsRingEnabled;
+        sharedPreferences.edit().putBoolean(KEY_SECONDS_RING, secondsRingEnabled).apply()
     }
 }
