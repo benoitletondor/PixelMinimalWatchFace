@@ -65,7 +65,7 @@ private fun MainView() {
     AppMaterialTheme{
         NavHost(navController = navController, startDestination = "main") {
             composable("main") {
-                Main(navController, hiltNavGraphViewModel<MainViewModel>())
+                Main(navController, hiltNavGraphViewModel())
             }
             activity(R.id.navigation_onboarding) {
                 activityClass = OnboardingActivity::class
