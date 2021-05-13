@@ -12,19 +12,19 @@ val primaryRed = Color(0xFFda482f)
 fun AppMaterialTheme(content: @Composable () -> Unit) {
     return MaterialTheme(
         colors = Colors(
-            primary = primaryBlue,
+            primary = primaryRed,
+            primaryVariant = primaryRed,
             background = Color.Black,
             surface = Color.Black,
             onPrimary = Color.White,
             onBackground = Color.White,
             error = Color.Red,
             onSurface = Color.White,
-            secondary = primaryRed,
+            secondary = primaryBlue,
+            secondaryVariant = primaryBlue,
             onSecondary = Color.White,
             isLight = false,
             onError = Color.White,
-            primaryVariant = primaryBlue,
-            secondaryVariant = primaryRed,
         ),
         content = content,
     )
