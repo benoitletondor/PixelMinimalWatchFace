@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="navigation_onboarding" type="id"/>
+    <item name="navigation_donate" type="id"/>
+</resources>
