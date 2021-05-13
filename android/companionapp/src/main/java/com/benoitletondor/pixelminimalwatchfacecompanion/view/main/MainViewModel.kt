@@ -18,6 +18,7 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.view.main
 import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.Billing
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumCheckStatus
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.PremiumPurchaseFlowResult
@@ -39,7 +40,7 @@ class MainViewModel @Inject constructor(
     private val sync: Sync,
     private val config: Config,
     private val storage: Storage
-) : ViewModel(), CoroutineScope by MainScope(), CapabilityClient.OnCapabilityChangedListener {
+) : ViewModel(), CapabilityClient.OnCapabilityChangedListener {
     private val navigationEventMutableFlow = MutableLiveFlow<NavigationDestination>()
     val navigationEventFlow: Flow<NavigationDestination> = navigationEventMutableFlow
 
@@ -61,18 +62,18 @@ class MainViewModel @Inject constructor(
         isSyncingStateFlow,
         lastSyncedPremiumStatusStateFlow,
         MainViewModel::computeState,
-    ).stateIn(this, SharingStarted.Eagerly, State.Loading)
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
     val stateFlow: Flow<State> = stateStateFlow
     val state: State get() = stateStateFlow.value
 
     init {
         if( !storage.isOnboardingFinished() ) {
-            launch {
+            viewModelScope.launch {
                 navigationEventMutableFlow.emit(NavigationDestination.Onboarding)
             }
         }
 
-        launch {
+        viewModelScope.launch {
             billing.userPremiumEventStream
                 .collect { premiumStatus ->
                     if( (premiumStatus == PremiumCheckStatus.Premium && lastSyncedPremiumStatusStateFlow.value == false) ||
@@ -92,7 +93,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun syncState(userPremium: Boolean) {
-        launch {
+        viewModelScope.launch {
             try {
                 isSyncingStateFlow.value = true
 
@@ -120,7 +121,6 @@ class MainViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        cancel()
         sync.unsubscribeToCapabilityChanges(this)
 
         super.onCleared()
@@ -135,7 +135,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun launchPremiumBuyFlow(host: Activity) {
-        launch {
+        viewModelScope.launch {
             try {
                 userIsBuyingPremiumStateFlow.value = true
 
@@ -169,13 +169,13 @@ class MainViewModel @Inject constructor(
             return
         }
 
-        launch {
+        viewModelScope.launch {
             navigationEventMutableFlow.emit(NavigationDestination.VoucherRedeem(voucher))
         }
     }
 
     fun onInstallWatchFaceButtonPressed() {
-        launch {
+        viewModelScope.launch {
             try {
                 if (sync.openPlayStoreOnWatch()) {
                     eventMutableFlow.emit(EventType.PLAY_STORE_OPENED_ON_WATCH)
@@ -194,13 +194,13 @@ class MainViewModel @Inject constructor(
     }
 
     fun onDonateButtonPressed() {
-        launch {
+        viewModelScope.launch {
             navigationEventMutableFlow.emit(NavigationDestination.Donate)
         }
     }
 
     private fun syncAppInstalledStatus() {
-        launch {
+        viewModelScope.launch {
             appInstalledStatusStateFlow.value = AppInstalledStatus.Verifying
             appInstalledStatusStateFlow.value = AppInstalledStatus.Result(sync.getWearableStatus())
         }
