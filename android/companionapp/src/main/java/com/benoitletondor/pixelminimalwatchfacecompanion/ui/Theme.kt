@@ -1,5 +1,6 @@
 package com.benoitletondor.pixelminimalwatchfacecompanion.ui
 
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -29,3 +30,9 @@ fun AppMaterialTheme(content: @Composable () -> Unit) {
         content = content,
     )
 }
+
+@Composable
+fun whiteButtonColors() = ButtonDefaults.buttonColors(
+    backgroundColor = Color.White,
+    contentColor = Color.Black,
+)

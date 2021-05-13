@@ -7,7 +7,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -17,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
+import com.benoitletondor.pixelminimalwatchfacecompanion.ui.whiteButtonColors
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.MainViewModel
 import java.lang.Exception
 import java.util.*
@@ -91,10 +91,7 @@ private fun PremiumLayout(
                 Sync.WearableStatus.AvailableAppNotInstalled -> {
                     Button(
                         onClick = watchFaceInstallButtonPressed,
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color.White,
-                            contentColor = Color.Black,
-                        ),
+                        colors = whiteButtonColors(),
                     ) {
                         Text(text = stringResource(R.string.premium_install_cta).toUpperCase(Locale.getDefault()))
                     }
@@ -135,10 +132,7 @@ private fun PremiumLayout(
 
         Button(
             onClick = donateButtonPressed,
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color.White,
-                contentColor = Color.Black,
-            ),
+            colors = whiteButtonColors(),
         ) {
             Text(text = stringResource(R.string.donation_cta).toUpperCase(Locale.getDefault()))
         }

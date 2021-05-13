@@ -3,6 +3,7 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.view.main.subviews
 import android.app.Activity
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,7 @@ import androidx.viewpager.widget.ViewPager
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
+import com.benoitletondor.pixelminimalwatchfacecompanion.ui.whiteButtonColors
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.MainViewModel
 import me.relex.circleindicator.CircleIndicator
 import java.util.*
@@ -49,6 +51,7 @@ fun NotPremium(state: MainViewModel.State.NotPremium, viewModel: MainViewModel) 
 
 @Composable
 private fun NotPremiumLayout(
+    showCarousel: Boolean = true,
     canInstallApp: Boolean,
     watchFaceInstallButtonPressed: () -> Unit,
     becomePremiumButtonPressed: () -> Unit,
@@ -64,40 +67,45 @@ private fun NotPremiumLayout(
     ) {
         Spacer(modifier = Modifier.height(10.dp))
 
-        AndroidView(
-            factory = { context ->
-                val layout = LayoutInflater.from(context).inflate(R.layout.not_premium_view_pager, null)
-                val pager = layout.findViewById<ViewPager>(R.id.not_premium_view_pager)
-                val indicator = layout.findViewById<CircleIndicator>(R.id.not_premium_view_pager_indicator)
-                pager.adapter = object : FragmentPagerAdapter((context as AppCompatActivity).supportFragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+        if (showCarousel) {
+            AndroidView(
+                factory = { context ->
+                    val layout = LayoutInflater.from(context).inflate(R.layout.not_premium_view_pager, null)
+                    val pager = layout.findViewById<ViewPager>(R.id.not_premium_view_pager)
+                    val indicator = layout.findViewById<CircleIndicator>(R.id.not_premium_view_pager_indicator)
+                    pager.adapter = object : FragmentPagerAdapter((context as AppCompatActivity).supportFragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
-                    override fun getItem(position: Int): Fragment = Fragment(when(position) {
-                        0 -> R.layout.fragment_premium_1
-                        1 -> R.layout.fragment_premium_2
-                        2 -> R.layout.fragment_premium_3
-                        else -> throw IllegalStateException("invalid position: $position")
-                    })
+                        override fun getItem(position: Int): Fragment = Fragment(when(position) {
+                            0 -> R.layout.fragment_premium_1
+                            1 -> R.layout.fragment_premium_2
+                            2 -> R.layout.fragment_premium_3
+                            else -> throw IllegalStateException("invalid position: $position")
+                        })
 
-                    override fun getCount(): Int = 3
-                }
+                        override fun getCount(): Int = 3
+                    }
 
-                indicator.setViewPager(pager)
-                layout
-            },
-            modifier = Modifier
+                    indicator.setViewPager(pager)
+                    layout
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(390.dp),
+            )
+        } else {
+            Spacer(modifier = Modifier
                 .fillMaxWidth()
-                .height(390.dp),
-        )
+                .height(390.dp)
+                .background(color = Color.Gray)
+            )
+        }
 
         Spacer(modifier = Modifier.height(10.dp))
 
         if (canInstallApp) {
             Button(
                 onClick = watchFaceInstallButtonPressed,
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color.White,
-                    contentColor = Color.Black,
-                )
+                colors = whiteButtonColors(),
             ) {
                 Text(text = stringResource(R.string.premium_install_cta).toUpperCase(Locale.getDefault()))
             }
@@ -143,11 +151,23 @@ private fun NotPremiumLayout(
 }
 
 @Composable
-@Preview(showSystemUi = true)
-private fun Preview() {
+@Preview(showSystemUi = true, name = "Can install app")
+private fun PreviewCanInstallApp() {
+    Preview(true)
+}
+
+@Composable
+@Preview(showSystemUi = true, name = "Can't install app")
+private fun PreviewCantInstallApp() {
+    Preview(false)
+}
+
+@Composable
+private fun Preview(canInstallApp: Boolean) {
     AppMaterialTheme {
         NotPremiumLayout(
-            canInstallApp = false,
+            showCarousel = false,
+            canInstallApp = canInstallApp,
             watchFaceInstallButtonPressed = {},
             becomePremiumButtonPressed = {},
             redeemPromoCodeButtonPressed = {},
