@@ -1,6 +1,7 @@
 package com.benoitletondor.pixelminimalwatchfacecompanion.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -10,7 +11,12 @@ import androidx.navigation.NavController
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.productSansFontFamily
 
 @Composable
-fun AppTopBarScaffold(navController: NavController, title: String, content: @Composable (PaddingValues) -> Unit) {
+fun AppTopBarScaffold(
+    navController: NavController,
+    title: String,
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit
+) {
     @Composable
     fun NavigationIcon(navController: NavController): @Composable (() -> Unit)? {
         return navController.previousBackStackEntry?.let {
@@ -33,6 +39,7 @@ fun AppTopBarScaffold(navController: NavController, title: String, content: @Com
                         fontFamily = productSansFontFamily,
                     )
                 },
+                actions = actions,
                 navigationIcon = NavigationIcon(navController),
                 elevation = 0.dp,
             )

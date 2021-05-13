@@ -31,7 +31,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltNavGraphViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
@@ -41,6 +40,7 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.helper.startSupportEmailActivity
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
+import com.benoitletondor.pixelminimalwatchfacecompanion.ui.components.AppTopBarMoreMenuItem
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.components.AppTopBarScaffold
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.donation.DonationActivity
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
@@ -52,14 +52,13 @@ import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 @Composable
-fun MainView() {
+private fun MainView() {
     val navController = rememberNavController()
 
     AppMaterialTheme{
         NavHost(navController = navController, startDestination = "main") {
             composable("main") {
-                val mainViewModel = hiltNavGraphViewModel<MainViewModel>()
-                Main(navController, mainViewModel)
+                Main(navController, hiltNavGraphViewModel<MainViewModel>())
             }
             activity(R.id.navigation_onboarding) {
                 activityClass = OnboardingActivity::class
@@ -72,7 +71,7 @@ fun MainView() {
 }
 
 @Composable
-fun Main(navController: NavController, mainViewModel: MainViewModel) {
+private fun Main(navController: NavController, mainViewModel: MainViewModel) {
     val state: MainViewModel.State by mainViewModel.stateFlow.collectAsState(initial = mainViewModel.state)
     val context = LocalContext.current
 
@@ -148,6 +147,21 @@ fun Main(navController: NavController, mainViewModel: MainViewModel) {
     AppTopBarScaffold(
         navController = navController,
         title = stringResource(R.string.app_name),
+        actions = {
+            AppTopBarMoreMenuItem {
+                DropdownMenuItem(
+                    onClick = { context.startSupportEmailActivity() },
+                ) {
+                    Text(stringResource(R.string.send_feedback_cta))
+                }
+                DropdownMenuItem(
+                    enabled = false,
+                    onClick = {},
+                ) {
+                    Text(stringResource(R.string.copyright, BuildConfig.VERSION_NAME))
+                }
+            }
+        },
         content = {
             when(val currentState = state) {
                 is MainViewModel.State.Error -> Error(navController = navController, state = currentState, viewModel = mainViewModel)
