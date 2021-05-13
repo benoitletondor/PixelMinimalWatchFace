@@ -24,19 +24,13 @@ import android.view.*
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.lifecycle.lifecycleScope
+import androidx.hilt.navigation.compose.hiltNavGraphViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.activity
@@ -50,6 +44,7 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.components.AppTopBarScaffold
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.donation.DonationActivity
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
+import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.subviews.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.flow.collect
@@ -57,12 +52,15 @@ import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 @Composable
-fun MainView(mainViewModel: MainViewModel = viewModel()) {
+fun MainView() {
     val navController = rememberNavController()
 
     AppMaterialTheme{
         NavHost(navController = navController, startDestination = "main") {
-            composable("main") { Main(navController, mainViewModel) }
+            composable("main") {
+                val mainViewModel = hiltNavGraphViewModel<MainViewModel>()
+                Main(navController, mainViewModel)
+            }
             activity(R.id.navigation_onboarding) {
                 activityClass = OnboardingActivity::class
             }
@@ -152,39 +150,14 @@ fun Main(navController: NavController, mainViewModel: MainViewModel) {
         title = stringResource(R.string.app_name),
         content = {
             when(val currentState = state) {
-                is MainViewModel.State.Error -> Error(navController = navController, state = currentState)
-                MainViewModel.State.Loading -> Loading(navController = navController)
-                is MainViewModel.State.NotPremium -> NotPremium(navController = navController, state = currentState)
-                is MainViewModel.State.Premium -> Premium(navController = navController, state = currentState)
-                is MainViewModel.State.Syncing -> Syncing(navController = navController, state = currentState)
+                is MainViewModel.State.Error -> Error(navController = navController, state = currentState, viewModel = mainViewModel)
+                MainViewModel.State.Loading -> Loading(navController = navController, viewModel = mainViewModel)
+                is MainViewModel.State.NotPremium -> NotPremium(navController = navController, state = currentState, viewModel = mainViewModel)
+                is MainViewModel.State.Premium -> Premium(navController = navController, state = currentState, viewModel = mainViewModel)
+                is MainViewModel.State.Syncing -> Syncing(navController = navController, state = currentState, viewModel = mainViewModel)
             }
         }
     )
-}
-
-@Composable
-fun Loading(navController: NavController) {
-    Text(text = "Loading")
-}
-
-@Composable
-fun Error(navController: NavController, state: MainViewModel.State.Error) {
-    Text(text = "Error: ${state.error.localizedMessage}")
-}
-
-@Composable
-fun Syncing(navController: NavController, state: MainViewModel.State.Syncing) {
-    Text(text = "Syncing: premium ? ${state.isUserPremium}")
-}
-
-@Composable
-fun Premium(navController: NavController, state: MainViewModel.State.Premium) {
-    Text(text = "Premium")
-}
-
-@Composable
-fun NotPremium(navController: NavController, state: MainViewModel.State.NotPremium) {
-    Text(text = "Not premium")
 }
 
 private fun launchRedeemVoucherFlow(context: Context, voucher: String): Boolean {
