@@ -18,9 +18,10 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.billing
 import android.app.Activity
 import androidx.lifecycle.LiveData
 import com.android.billingclient.api.SkuDetails
+import kotlinx.coroutines.flow.Flow
 
 interface Billing {
-    val userPremiumEventStream: LiveData<PremiumCheckStatus>
+    val userPremiumEventStream: Flow<PremiumCheckStatus>
 
     fun isUserPremium(): Boolean
     fun updatePremiumStatusIfNeeded()

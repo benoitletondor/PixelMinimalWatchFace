@@ -23,6 +23,8 @@ import androidx.lifecycle.MutableLiveData
 import com.android.billingclient.api.*
 import com.benoitletondor.pixelminimalwatchfacecompanion.storage.Storage
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.IOException
 import java.util.*
@@ -63,10 +65,10 @@ class BillingImpl @Inject constructor(
     private var premiumFlowContinuation: Continuation<PremiumPurchaseFlowResult>? = null
     private var donationFlowContinuation: Continuation<Boolean>? = null
 
-    override val userPremiumEventStream: LiveData<PremiumCheckStatus>
+    override val userPremiumEventStream: Flow<PremiumCheckStatus>
         get() = userPremiumEventSteamInternal
 
-    private val userPremiumEventSteamInternal = MutableLiveData<PremiumCheckStatus>()
+    private val userPremiumEventSteamInternal = MutableStateFlow<PremiumCheckStatus>(PremiumCheckStatus.Initializing)
 
     init {
         startBillingClient()
@@ -97,11 +99,11 @@ class BillingImpl @Inject constructor(
 
         // Case if a voucher has been redeemed
         if( status == PremiumCheckStatus.NotPremium && storage.isUserPremium() ) {
-            userPremiumEventSteamInternal.postValue(PremiumCheckStatus.Premium)
+            userPremiumEventSteamInternal.value = PremiumCheckStatus.Premium
             return
         }
 
-        userPremiumEventSteamInternal.postValue(status)
+        userPremiumEventSteamInternal.value = status
     }
 
     /**

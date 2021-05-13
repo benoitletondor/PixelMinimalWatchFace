@@ -22,20 +22,93 @@ import android.os.Bundle
 import android.view.*
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentPagerAdapter
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.benoitletondor.pixelminimalwatchfacecompanion.BuildConfig
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.helper.startSupportEmailActivity
-import com.benoitletondor.pixelminimalwatchfacecompanion.sync.Sync
+import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
+import com.benoitletondor.pixelminimalwatchfacecompanion.ui.components.AppTopBarScaffold
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.donation.DonationActivity
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.net.URLEncoder
+
+@Composable
+fun MainViewNav(mainViewModel: MainViewModel = viewModel()) {
+    val navController = rememberNavController()
+
+    AppMaterialTheme{
+        NavHost(navController = navController, startDestination = "main") {
+            composable("main") { Main(navController, mainViewModel) }
+        }
+    }
+}
+
+@Composable
+fun Main(navController: NavController, mainViewModel: MainViewModel) {
+    val state: MainViewModel.State by mainViewModel.stateFlow.collectAsState(initial = mainViewModel.state)
+
+    AppTopBarScaffold(
+        navController = navController,
+        title = stringResource(R.string.app_name),
+        content = {
+            when(val currentState = state) {
+                is MainViewModel.State.Error -> Error(navController = navController, state = currentState)
+                MainViewModel.State.Loading -> Loading(navController = navController)
+                is MainViewModel.State.NotPremium -> NotPremium(navController = navController, state = currentState)
+                is MainViewModel.State.Premium -> Premium(navController = navController, state = currentState)
+                is MainViewModel.State.Syncing -> Syncing(navController = navController, state = currentState)
+            }
+        }
+    )
+}
+
+@Composable
+fun Loading(navController: NavController) {
+    Text(text = "Loading")
+}
+
+@Composable
+fun Error(navController: NavController, state: MainViewModel.State.Error) {
+    Text(text = "Error: ${state.error.localizedMessage}")
+}
+
+@Composable
+fun Syncing(navController: NavController, state: MainViewModel.State.Syncing) {
+    Text(text = "Syncing: premium ? ${state.isUserPremium}")
+}
+
+@Composable
+fun Premium(navController: NavController, state: MainViewModel.State.Premium) {
+    Text(text = "Premium")
+}
+
+@Composable
+fun NotPremium(navController: NavController, state: MainViewModel.State.NotPremium) {
+    Text(text = "Not premium")
+}
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -43,7 +116,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContent {
+            MainViewNav()
+        }
+        /*setContentView(R.layout.activity_main)
 
         viewModel.stateEventStream.observe(this, { state ->
             when(state) {
@@ -147,58 +223,6 @@ class MainActivity : AppCompatActivity() {
 
         main_activity_not_premium_view_not_premium_view_pager_indicator.setViewPager(main_activity_not_premium_view_not_premium_view_pager)
 
-        viewModel.errorSyncingEvent.observe(this, { syncingError ->
-            if( main_activity_premium_view?.visibility == View.VISIBLE ) {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.error_syncing_title)
-                    .setMessage(getString(R.string.error_syncing_message, syncingError.message))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            }
-        })
-
-        viewModel.errorPayingEvent.observe(this, { paymentError ->
-            AlertDialog.Builder(this)
-                .setTitle(R.string.error_paying_title)
-                .setMessage(getString(R.string.error_paying_message, paymentError.message))
-                .setPositiveButton(android.R.string.ok, null)
-                .show()
-        })
-
-        viewModel.syncSucceedEvent.observe(this, {
-            Toast.makeText(this, R.string.sync_succeed_message, Toast.LENGTH_LONG).show()
-        })
-
-        viewModel.launchOnboardingEvent.observe(this, {
-            startActivity(Intent(this, OnboardingActivity::class.java))
-        })
-
-        viewModel.voucherFlowLaunchEvent.observe(this, { voucher ->
-            if ( !launchRedeemVoucherFlow(voucher) ) {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.iab_purchase_error_title)
-                    .setMessage(R.string.iab_purchase_error_message)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            }
-        })
-
-        viewModel.openPlayStoreStatusEvent.observe(this, { opened ->
-            if( opened ) {
-                Toast.makeText(this, R.string.playstore_opened_on_watch_message, Toast.LENGTH_LONG).show()
-            } else {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.playstore_not_opened_on_watch_title)
-                    .setMessage(R.string.playstore_not_opened_on_watch_message)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-            }
-        })
-
-        viewModel.openDonateScreenEvent.observe(this, {
-            startActivity(Intent(this, DonationActivity::class.java))
-        })
-
         main_activity_error_view_retry_button.setOnClickListener {
             viewModel.retryPremiumStatusCheck()
         }
@@ -225,6 +249,69 @@ class MainActivity : AppCompatActivity() {
 
         main_activity_premium_view_donate_button.setOnClickListener {
             viewModel.onDonateButtonPressed()
+        }*/
+
+        lifecycleScope.launch {
+            viewModel.eventFlow.collect { eventType ->
+                when(eventType) {
+                    MainViewModel.EventType.PLAY_STORE_OPENED_ON_WATCH -> {
+                        Toast.makeText(this@MainActivity, R.string.playstore_opened_on_watch_message, Toast.LENGTH_LONG).show()
+                    }
+                    MainViewModel.EventType.SYNC_WITH_WATCH_SUCCEED -> {
+                        Toast.makeText(this@MainActivity, R.string.sync_succeed_message, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.errorEventFlow.collect { errorType ->
+                when(errorType) {
+                    is MainViewModel.ErrorType.ErrorWhileSyncingWithWatch -> {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(R.string.error_syncing_title)
+                            .setMessage(getString(R.string.error_syncing_message, errorType.error.message))
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show()
+                    }
+                    MainViewModel.ErrorType.UnableToOpenPlayStoreOnWatch -> {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(R.string.playstore_not_opened_on_watch_title)
+                            .setMessage(R.string.playstore_not_opened_on_watch_message)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show()
+                    }
+                    is MainViewModel.ErrorType.UnableToPay -> {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(R.string.error_paying_title)
+                            .setMessage(getString(R.string.error_paying_message, errorType.error.message))
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show()
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.navigationEventFlow.collect { direction ->
+                when(direction) {
+                    MainViewModel.NavigationDestination.Donate -> {
+                        startActivity(Intent(this@MainActivity, DonationActivity::class.java))
+                    }
+                    MainViewModel.NavigationDestination.Onboarding -> {
+                        startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
+                    }
+                    is MainViewModel.NavigationDestination.VoucherRedeem -> {
+                        if ( !launchRedeemVoucherFlow(direction.voucherCode) ) {
+                            AlertDialog.Builder(this@MainActivity)
+                                .setTitle(R.string.iab_purchase_error_title)
+                                .setMessage(R.string.iab_purchase_error_message)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show()
+                        }
+                    }
+                }
+            }
         }
     }
 
