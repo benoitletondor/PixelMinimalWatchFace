@@ -2,7 +2,6 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.view.main.subviews
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -12,14 +11,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.MainViewModel
+import java.util.*
 
 @Composable
-fun Error(navController: NavController, state: MainViewModel.State.Error, viewModel: MainViewModel) {
+fun Error(state: MainViewModel.State.Error, viewModel: MainViewModel) {
     ErrorLayout(
         errorMessage = state.error.localizedMessage ?: "",
         onRetryButtonClicked = {
@@ -50,7 +48,7 @@ private fun ErrorLayout(errorMessage: String, onRetryButtonClicked: () -> Unit) 
         )
         Spacer(modifier = Modifier.height(30.dp))
         Button(onClick = onRetryButtonClicked) {
-            Text(stringResource(R.string.error_retry_cta))
+            Text(stringResource(R.string.error_retry_cta).toUpperCase(Locale.getDefault()))
         }
     }
 }

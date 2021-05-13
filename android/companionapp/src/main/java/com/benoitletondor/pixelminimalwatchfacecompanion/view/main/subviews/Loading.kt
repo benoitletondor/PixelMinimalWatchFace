@@ -10,13 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.MainViewModel
 
 @Composable
-fun Loading(navController: NavController, viewModel: MainViewModel) {
+fun Loading(viewModel: MainViewModel) {
     LoadingLayout()
 }
 
@@ -33,7 +32,7 @@ private fun LoadingLayout() {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(R.string.loading_premium_status),
-            color = MaterialTheme.colors.onBackground
+            color = MaterialTheme.colors.onBackground,
         )
     }
 }

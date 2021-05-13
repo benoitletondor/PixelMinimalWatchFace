@@ -17,8 +17,13 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.view.main
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowManager
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AlertDialog
@@ -43,7 +48,6 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.view.donation.DonationA
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.subviews.*
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
@@ -93,7 +97,7 @@ private fun Main(navController: NavController, mainViewModel: MainViewModel) {
                         navController.navigate(R.id.navigation_onboarding)
                     }
                     is MainViewModel.NavigationDestination.VoucherRedeem -> {
-                        if ( !launchRedeemVoucherFlow(context, navDestination.voucherCode) ) {
+                        if ( !context.launchRedeemVoucherFlow(navDestination.voucherCode) ) {
                             AlertDialog.Builder(context)
                                 .setTitle(R.string.iab_purchase_error_title)
                                 .setMessage(R.string.iab_purchase_error_message)
@@ -146,6 +150,11 @@ private fun Main(navController: NavController, mainViewModel: MainViewModel) {
                     MainViewModel.EventType.SYNC_WITH_WATCH_SUCCEED -> {
                         Toast.makeText(context, R.string.sync_succeed_message, Toast.LENGTH_LONG).show()
                     }
+                    MainViewModel.EventType.SHOW_VOUCHER_INPUT -> {
+                        context.showRedeemVoucherUI { voucherInput ->
+                            mainViewModel.onVoucherInput(voucherInput)
+                        }
+                    }
                 }
             }
         }
@@ -171,161 +180,31 @@ private fun Main(navController: NavController, mainViewModel: MainViewModel) {
         },
         content = {
             when(val currentState = state) {
-                is MainViewModel.State.Error -> Error(navController = navController, state = currentState, viewModel = mainViewModel)
-                MainViewModel.State.Loading -> Loading(navController = navController, viewModel = mainViewModel)
-                is MainViewModel.State.NotPremium -> NotPremium(navController = navController, state = currentState, viewModel = mainViewModel)
-                is MainViewModel.State.Premium -> Premium(navController = navController, state = currentState, viewModel = mainViewModel)
-                is MainViewModel.State.Syncing -> Syncing(navController = navController, state = currentState, viewModel = mainViewModel)
+                is MainViewModel.State.Error -> Error(state = currentState, viewModel = mainViewModel)
+                MainViewModel.State.Loading -> Loading(viewModel = mainViewModel)
+                is MainViewModel.State.NotPremium -> NotPremium(state = currentState, viewModel = mainViewModel)
+                is MainViewModel.State.Premium -> Premium(state = currentState, viewModel = mainViewModel)
+                is MainViewModel.State.Syncing -> Syncing(state = currentState, viewModel = mainViewModel)
             }
         }
     )
 }
 
-private fun launchRedeemVoucherFlow(context: Context, voucher: String): Boolean {
+private fun Context.launchRedeemVoucherFlow(voucher: String): Boolean {
     return try {
         val url = "https://play.google.com/redeem?code=" + URLEncoder.encode(voucher, "UTF-8")
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         true
     } catch (e: Exception) {
         false
     }
 }
 
-
-/* viewModel.stateEventStream.observe(this, { state ->
-    when(state) {
-        is MainViewModel.State.Loading -> {
-            main_activity_not_premium_view.visibility = View.GONE
-            main_activity_loading_view.visibility = View.VISIBLE
-            main_activity_premium_view.visibility = View.GONE
-            main_activity_syncing_view.visibility = View.GONE
-            main_activity_error_view.visibility = View.GONE
-        }
-        is MainViewModel.State.NotPremium -> {
-            main_activity_not_premium_view.visibility = View.VISIBLE
-            main_activity_loading_view.visibility = View.GONE
-            main_activity_premium_view.visibility = View.GONE
-            main_activity_syncing_view.visibility = View.GONE
-            main_activity_error_view.visibility = View.GONE
-            when( val installedStatus = state.appInstalledStatus ) {
-                is MainViewModel.AppInstalledStatus.Result -> {
-                    if( installedStatus.wearableStatus == Sync.WearableStatus.AvailableAppNotInstalled ) {
-                        main_activity_not_premium_view_install_button.visibility = View.VISIBLE
-                        main_activity_not_premium_view_not_premium_install_text.visibility = View.GONE
-                    } else {
-                        main_activity_not_premium_view_install_button.visibility = View.GONE
-                        main_activity_not_premium_view_not_premium_install_text.visibility = View.VISIBLE
-                    }
-                }
-                else -> {
-                    main_activity_not_premium_view_install_button.visibility = View.GONE
-                    main_activity_not_premium_view_not_premium_install_text.visibility = View.VISIBLE
-                }
-            }
-        }
-        is MainViewModel.State.Syncing -> {
-            main_activity_not_premium_view.visibility = View.GONE
-            main_activity_loading_view.visibility = View.GONE
-            main_activity_premium_view.visibility = View.GONE
-            main_activity_syncing_view.visibility = View.VISIBLE
-            main_activity_error_view.visibility = View.GONE
-        }
-        is MainViewModel.State.Premium -> {
-            main_activity_not_premium_view.visibility = View.GONE
-            main_activity_loading_view.visibility = View.GONE
-            main_activity_premium_view.visibility = View.VISIBLE
-            main_activity_syncing_view.visibility = View.GONE
-            main_activity_error_view.visibility = View.GONE
-            when( val installedStatus = state.appInstalledStatus ) {
-                MainViewModel.AppInstalledStatus.Verifying -> {
-                    main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_loading)
-                    main_activity_premium_loading_watch_status_progress_bar.visibility = View.VISIBLE
-                    main_activity_premium_view_install_button.visibility = View.GONE
-                    main_activity_premium_view_sync_button.visibility = View.GONE
-                }
-                is MainViewModel.AppInstalledStatus.Result -> {
-                    when( installedStatus.wearableStatus ) {
-                        Sync.WearableStatus.AvailableAppNotInstalled -> {
-                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_not_installed)
-                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
-                            main_activity_premium_view_install_button.visibility = View.VISIBLE
-                            main_activity_premium_view_sync_button.visibility = View.VISIBLE
-                        }
-                        Sync.WearableStatus.AvailableAppInstalled -> {
-                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_installed)
-                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
-                            main_activity_premium_view_install_button.visibility = View.GONE
-                            main_activity_premium_view_sync_button.visibility = View.VISIBLE
-                        }
-                        else -> {
-                            main_activity_premium_view_premium_text_2.text = getString(R.string.premium_status_unknown)
-                            main_activity_premium_loading_watch_status_progress_bar.visibility = View.GONE
-                            main_activity_premium_view_install_button.visibility = View.GONE
-                            main_activity_premium_view_sync_button.visibility = View.VISIBLE
-                        }
-                    }
-
-                }
-            }
-        }
-        is MainViewModel.State.Error -> {
-            main_activity_not_premium_view.visibility = View.GONE
-            main_activity_loading_view.visibility = View.GONE
-            main_activity_premium_view.visibility = View.GONE
-            main_activity_syncing_view.visibility = View.GONE
-            main_activity_error_view.visibility = View.VISIBLE
-            main_activity_error_view_text_2.text = getString(R.string.premium_error, state.error.message)
-        }
-    }
-})
-
-main_activity_not_premium_view_not_premium_view_pager.adapter = object : FragmentPagerAdapter(supportFragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-
-    override fun getItem(position: Int): Fragment = Fragment(when(position) {
-        0 -> R.layout.fragment_premium_1
-        1 -> R.layout.fragment_premium_2
-        2 -> R.layout.fragment_premium_3
-        else -> throw IllegalStateException("invalid position: $position")
-    })
-
-    override fun getCount(): Int = 3
-
-}
-
-main_activity_not_premium_view_not_premium_view_pager_indicator.setViewPager(main_activity_not_premium_view_not_premium_view_pager)
-
-main_activity_error_view_retry_button.setOnClickListener {
-    viewModel.retryPremiumStatusCheck()
-}
-
-main_activity_premium_view_sync_button.setOnClickListener {
-    viewModel.triggerSync()
-}
-
-main_activity_not_premium_view_buy_button.setOnClickListener {
-    viewModel.launchPremiumBuyFlow(this)
-}
-
-main_activity_not_premium_view_promocode_button.setOnClickListener {
-    showRedeemVoucherUI()
-}
-
-main_activity_premium_view_install_button.setOnClickListener {
-    viewModel.onInstallWatchFaceButtonPressed()
-}
-
-main_activity_not_premium_view_install_button.setOnClickListener {
-    viewModel.onInstallWatchFaceButtonPressed()
-}
-
-main_activity_premium_view_donate_button.setOnClickListener {
-    viewModel.onDonateButtonPressed()
-}
-private fun showRedeemVoucherUI() {
-    val dialogView = layoutInflater.inflate(R.layout.dialog_redeem_voucher, null)
+private fun Context.showRedeemVoucherUI(onVoucherInput: (String) -> Unit) {
+    val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_redeem_voucher, null)
     val voucherEditText: EditText = dialogView.findViewById(R.id.voucher)
 
-    val builder = AlertDialog.Builder(this)
+    val builder = android.app.AlertDialog.Builder(this)
         .setTitle(R.string.voucher_redeem_dialog_title)
         .setMessage(R.string.voucher_redeem_dialog_message)
         .setView(dialogView)
@@ -334,7 +213,7 @@ private fun showRedeemVoucherUI() {
 
             val voucher = voucherEditText.text.toString()
             if (voucher.trim { it <= ' ' }.isEmpty()) {
-                AlertDialog.Builder(this)
+                android.app.AlertDialog.Builder(this)
                     .setTitle(R.string.voucher_redeem_error_dialog_title)
                     .setMessage(R.string.voucher_redeem_error_code_invalid_dialog_message)
                     .setPositiveButton(android.R.string.ok, null)
@@ -343,7 +222,7 @@ private fun showRedeemVoucherUI() {
                 return@setPositiveButton
             }
 
-            //viewModel.onVoucherInput(voucher)
+            onVoucherInput(voucher)
         }
         .setNegativeButton(android.R.string.cancel, null)
 
@@ -356,4 +235,4 @@ private fun showRedeemVoucherUI() {
             dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
         }
     }
-}*/
+}

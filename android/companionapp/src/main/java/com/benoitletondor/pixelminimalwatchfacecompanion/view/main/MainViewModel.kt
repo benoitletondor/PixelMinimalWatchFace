@@ -193,6 +193,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun onRedeemPromoCodeButtonPressed() {
+        viewModelScope.launch {
+            eventMutableFlow.emit(EventType.SHOW_VOUCHER_INPUT)
+        }
+    }
+
     fun onDonateButtonPressed() {
         viewModelScope.launch {
             navigationEventMutableFlow.emit(NavigationDestination.Donate)
@@ -230,6 +236,7 @@ class MainViewModel @Inject constructor(
     enum class EventType {
         PLAY_STORE_OPENED_ON_WATCH,
         SYNC_WITH_WATCH_SUCCEED,
+        SHOW_VOUCHER_INPUT,
     }
 
     sealed class AppInstalledStatus {
@@ -246,6 +253,7 @@ class MainViewModel @Inject constructor(
             isSyncing: Boolean,
             lastSyncedPremiumStatus: Boolean?,
         ) : State {
+            return State.Premium(AppInstalledStatus.Result(Sync.WearableStatus.AvailableAppNotInstalled))
             if (userIsBuyingPremium) {
                 return State.Loading
             }

@@ -10,13 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.MainViewModel
 
 @Composable
-fun Syncing(navController: NavController, state: MainViewModel.State.Syncing, viewModel: MainViewModel) {
+fun Syncing(state: MainViewModel.State.Syncing, viewModel: MainViewModel) {
     SyncingLayout()
 }
 
