@@ -23,13 +23,20 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.benoitletondor.pixelminimalwatchfacecompanion.R
 import com.benoitletondor.pixelminimalwatchfacecompanion.helper.startSupportEmailActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_donation.*
 
-@AndroidEntryPoint
+@Composable
+fun Donation(navController: NavController, donationViewModel: DonationViewModel) {
+
+}
+
+/*@AndroidEntryPoint
 class DonationActivity : AppCompatActivity() {
     private val viewModel: DonationViewModel by viewModels()
 
@@ -106,4 +113,4 @@ class DonationActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-}
+}*/

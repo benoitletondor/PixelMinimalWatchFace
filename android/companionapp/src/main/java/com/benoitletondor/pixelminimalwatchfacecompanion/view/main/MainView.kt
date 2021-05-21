@@ -44,7 +44,7 @@ import com.benoitletondor.pixelminimalwatchfacecompanion.helper.startSupportEmai
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.AppMaterialTheme
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.components.AppTopBarMoreMenuItem
 import com.benoitletondor.pixelminimalwatchfacecompanion.ui.components.AppTopBarScaffold
-import com.benoitletondor.pixelminimalwatchfacecompanion.view.donation.DonationActivity
+import com.benoitletondor.pixelminimalwatchfacecompanion.view.donation.Donation
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.onboarding.OnboardingActivity
 import com.benoitletondor.pixelminimalwatchfacecompanion.view.main.subviews.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -71,11 +71,11 @@ private fun MainView() {
             composable("main") {
                 Main(navController, hiltNavGraphViewModel())
             }
+            composable("donation") {
+                Donation(navController, hiltNavGraphViewModel())
+            }
             activity(R.id.navigation_onboarding) {
                 activityClass = OnboardingActivity::class
-            }
-            activity(R.id.navigation_donate) {
-                activityClass = DonationActivity::class
             }
         }
     }

@@ -17,35 +17,46 @@ package com.benoitletondor.pixelminimalwatchfacecompanion.view.donation
 
 import android.app.Activity
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.SkuDetails
-import com.benoitletondor.pixelminimalwatchfacecompanion.SingleLiveEvent
 import com.benoitletondor.pixelminimalwatchfacecompanion.billing.Billing
+import com.benoitletondor.pixelminimalwatchfacecompanion.helper.MutableLiveFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class DonationViewModel @Inject constructor(private val billing: Billing) : ViewModel(), CoroutineScope by MainScope() {
-    val errorPayingEvent = SingleLiveEvent<Throwable>()
-    val donationSuccessEvent = SingleLiveEvent<SkuDetails>()
-    val stateEventStream = MutableLiveData<State>(State.Loading)
+class DonationViewModel @Inject constructor(
+    private val billing: Billing,
+) : ViewModel() {
+    val errorPayingEventMutableFlow = MutableLiveFlow<Throwable>()
+    val errorPayingEventFlow: Flow<Throwable> = errorPayingEventMutableFlow
+
+    val donationSuccessEventMutableFlow = MutableLiveFlow<SkuDetails>()
+    val donationSuccessEventFlow: Flow<SkuDetails> = donationSuccessEventMutableFlow
+
+    val stateMutableFlow = MutableStateFlow<State>(State.Loading)
+    val stateFlow: Flow<State> = stateMutableFlow
 
     init {
         loadSKUs()
     }
 
     private fun loadSKUs() {
-        launch {
+        viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                stateEventStream.postValue(State.Loading)
+                stateMutableFlow.value = State.Loading
 
                 try {
-                    stateEventStream.postValue(State.Load(billing.getDonationsSKUs()))
+                    stateMutableFlow.value = State.Load(billing.getDonationsSKUs())
                 } catch (error: Throwable) {
                     Log.e("DonationViewModel", "Error while loading SKUs", error)
-                    stateEventStream.postValue(State.ErrorLoading(error))
+                    stateMutableFlow.value = State.ErrorLoading(error)
                 }
             }
         }
@@ -56,16 +67,16 @@ class DonationViewModel @Inject constructor(private val billing: Billing) : View
     }
 
     fun onDonateButtonClicked(sku: SkuDetails, activity: Activity) {
-        launch {
+        viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
                     val purchaseStatus = billing.launchDonationPurchaseFlow(activity, sku)
                     if( purchaseStatus ) {
-                        donationSuccessEvent.postValue(sku)
+                        donationSuccessEventMutableFlow.emit(sku)
                     }
                 } catch (error: Throwable) {
                     Log.e("DonationViewModel", "Error while donation for SKU: ${sku.sku}", error)
-                    errorPayingEvent.postValue(error)
+                    errorPayingEventMutableFlow.emit(error)
                 }
             }
         }
